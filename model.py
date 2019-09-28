@@ -95,7 +95,7 @@ class midiModel(object):
                 #print (y)
                 #print ("===========================================================")
                 # 开始训练
-                self.model.fit(
+                status = self.model.fit(
                     [[x]],[[y]], # 我也不知道为什么要这样写。这是试出来的
                     verbose=True,
                     steps_per_epoch=32,
@@ -104,7 +104,8 @@ class midiModel(object):
                         keras.callbacks.ModelCheckpoint(self.model_path, save_weights_only=False)
                     ]
                 )
-                
+                loss = abs(float(status.history['loss'][0]))
+                print("loss:",loss)
                 x = np.zeros(
                     shape=(32 , 128)
                 )
@@ -128,11 +129,32 @@ class midiModel(object):
                 break
         res_vec = self.model.predict([[x]])[0]
         res=[]
+        count = 0
+        noteNum = len(notes)
         for it in res_vec:
-            mp = np.argmax(it)
+            
+            mp = -1
+            mpvl = 0
+            
+            if noteNum>count :
+                hn = notes[count]
+                
+                for posi in hn :
+                    if posi<128 and posi>=0 :
+                        value = it[int(posi)]
+                        # 获取最大的位置
+                        if value>mpvl :
+                            mp   = int(posi)
+                            mpvl = value
+                        
+            # 检验是否静音
+            if it[128]>mpvl:
+                mp = 128
+            
             if mp>=128 or mp<0 :
                 mp = -1
             res.append(mp)
+            count = count + 1
             
         return res
         
@@ -140,5 +162,5 @@ if __name__ == '__main__' :
     model = midiModel("model.h5")
     model.train("data.txt")
     print("test:")
-    print(model.predict([[1,2,3],[2,3,4]]))
+    print(model.predict([[1,3,5],[3,5,7]]))
     
