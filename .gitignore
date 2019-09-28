@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+*.h5
+*.log
+__pycache__/
+*.py[cod]
+*$py.class
+
+data.txt
